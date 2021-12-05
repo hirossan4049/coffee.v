@@ -4,10 +4,14 @@
 
 import io
 import os
+import log
 import net
 
 
 fn main() {
+    mut log := log.Log{}
+    log.set_level(.info)
+
     println("
                __  __
      ___ ___  / _|/ _| ___  ___      __   __
@@ -17,6 +21,8 @@ fn main() {
 
     ")
     mut l := net.listen_tcp(.ip6, ':2525') or { panic("error") }
+
+    log.info("start server localhost:2525")
 
     for {
         mut conn := l.accept() or {

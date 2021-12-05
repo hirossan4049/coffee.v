@@ -1,14 +1,22 @@
+//
+// CREATED BY HIROSSAN4049.
+//
 
 import io
+import os
 import net
-import net.urllib
-import net.http
 
 
 fn main() {
-    println("hello world")
+    println("
+               __  __
+     ___ ___  / _|/ _| ___  ___      __   __
+    / __/ _ \\| |_| |_ / _ \\/ _ \\     \\ \\ / /
+   | (_| (_) |  _|  _|  __/  __/  _   \\ V /
+    \\___\\___/|_| |_|  \\___|\\___| (_)   \\_/
+
+    ")
     mut l := net.listen_tcp(.ip6, ':2525') or { panic("error") }
-    println(l)
 
     for {
         mut conn := l.accept() or {
@@ -42,16 +50,17 @@ fn handle_conn(mut conn net.TcpConn) {
 
     //req := http.parse_request(mut reader) or { return }
     //println(req)
+    //
+    data := os.read_file("html/418.html") or {
+        panic("cannnot read html/418.html")
+        return
+    }
 
-    conn.write("
-HTTP/1.1 200 OK
+    conn.write(("
+HTTP/1.1 418 OK
 Content-Type: text/html
 
-<!DOCTYPE html>
-<html>
-<h1>hello world</h1>
-</html>
-    ".bytes()) or {}
+    " + data).bytes()) or {}
 }
 
 fn parse_request_line(s string) (string, string, string) {

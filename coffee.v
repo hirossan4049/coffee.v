@@ -22,7 +22,7 @@ mut:
     scheme string      
     host string
     pot_tag string
-    additive ?[]string
+    additive []string
 }
 
 
@@ -71,20 +71,22 @@ fn handle_conn(mut conn net.TcpConn) {
 
     protocol := version.split("/")[0]
 
-    for {
-        mut body := reader.read_line() or { return }
-        println(body)
+    mut parsed_scheme := parse_scheme(scheme) or { 
+        request_http(mut conn)
+        return 
+    }
+    println(parsed_scheme)
 
-        if reader.end_of_stream {
-            break
-        }
+    for {
+        mut body := reader.read_line() or { break }
+        println(body)
     }
     
 
     if protocol == "HTTP" {
         request_http(mut conn)
     } else if protocol == "HTCPCP" {
-
+        conn.write("$parsed_scheme.pot_tag ok;)".bytes()) or {}
     }
 
 }
@@ -103,7 +105,7 @@ Content-Type: text/html\n
 fn parse_request_line(s string) (string, string, string) {
 	words := s.split(' ')
 	if words.len != 3 {
-		return "", "", ""//panic('malformed request line')
+		return "", "", ""
 	}
 	method := words[0]
 	target := words[1]
@@ -112,7 +114,7 @@ fn parse_request_line(s string) (string, string, string) {
 }
 
 fn parse_scheme(s string) ?TeapotScheme {
-    sc := s.split(':')
+    sc := s.split('://')
     if sc.len != 2 {
         return none
     }
@@ -126,8 +128,10 @@ fn parse_scheme(s string) ?TeapotScheme {
     tag_additive := items[1] // pot tag & Additive
     ta := tag_additive.split("?")
     
-    if ta.len == 1 {
+    mut additive := []string
+    if ta.len == 2 {
         // not found additive
+        additive = ta[1].split('&') // rfc2324で定義されていない？
     }
 
     pot_tag := ta[0]
@@ -136,6 +140,6 @@ fn parse_scheme(s string) ?TeapotScheme {
         scheme: sc[0]
         host: host
         pot_tag: pot_tag
-        //additive: additive
+        additive: additive
     }
 }

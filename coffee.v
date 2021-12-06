@@ -17,6 +17,15 @@ const (
 //)
 
 
+struct TeapotScheme {
+mut:
+    scheme string      
+    host string
+    pot_tag string
+    additive ?[]string
+}
+
+
 fn main() {
     mut log := log.Log{}
     log.set_level(.info)
@@ -58,9 +67,19 @@ fn handle_conn(mut conn net.TcpConn) {
 
     conn.write("".bytes()) or {}
     mut line := reader.read_line() or { return }
-    method, target, version := parse_request_line(line)
+    method, scheme, version := parse_request_line(line)
 
     protocol := version.split("/")[0]
+
+    for {
+        mut body := reader.read_line() or { return }
+        println(body)
+
+        if reader.end_of_stream {
+            break
+        }
+    }
+    
 
     if protocol == "HTTP" {
         request_http(mut conn)
@@ -90,4 +109,33 @@ fn parse_request_line(s string) (string, string, string) {
 	target := words[1]
 	version := words[2]
 	return method, target, version
+}
+
+fn parse_scheme(s string) ?TeapotScheme {
+    sc := s.split(':')
+    if sc.len != 2 {
+        return none
+    }
+
+    items := sc[1].split("/")
+    if items.len != 2 {
+        return none
+    }
+
+    host := items[0]
+    tag_additive := items[1] // pot tag & Additive
+    ta := tag_additive.split("?")
+    
+    if ta.len == 1 {
+        // not found additive
+    }
+
+    pot_tag := ta[0]
+
+    return TeapotScheme {
+        scheme: sc[0]
+        host: host
+        pot_tag: pot_tag
+        //additive: additive
+    }
 }

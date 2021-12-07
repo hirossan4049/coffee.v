@@ -31,6 +31,17 @@ fn main() {
     log.set_level(.info)
 
     println("
+         (    (   (      (
+         )    )      )    )
+         (____(_____(_____(___
+         l                   l
+         l                   l____
+         l                 ___   l
+         l                l   l   l
+         l                l   l   l
+         l                 l__l   l
+         l                    ____l
+         \\__________________/
                __  __
      ___ ___  / _|/ _| ___  ___      __   __
     / __/ _ \\| |_| |_ / _ \\/ _ \\     \\ \\ / /
@@ -86,7 +97,7 @@ fn handle_conn(mut conn net.TcpConn) {
     if protocol == "HTTP" {
         request_http(mut conn)
     } else if protocol == "HTCPCP" {
-        conn.write("$parsed_scheme.pot_tag ok;)".bytes()) or {}
+        conn.write("$parsed_scheme.pot_tag ok;)\n".bytes()) or {}
     }
 
 }

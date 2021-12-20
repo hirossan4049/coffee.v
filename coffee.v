@@ -25,6 +25,12 @@ mut:
     additive []string
 }
 
+struct TeapotHeader {
+mut:
+	content_type string
+	accept_additions []string
+}
+
 
 fn main() {
     mut log := log.Log{}
@@ -82,25 +88,34 @@ fn handle_conn(mut conn net.TcpConn) {
 
     protocol := version.split("/")[0]
 
-    mut parsed_scheme := parse_scheme(scheme) or { 
+    parsed_scheme := parse_scheme(scheme) or { 
         request_http(mut conn)
         return 
     }
+	println(method)
     println(parsed_scheme)
 
+	mut body := ""
+
     for {
-        mut body := reader.read_line() or { break }
-        println(body)
+        mut bodyline := reader.read_line() or { break }
+		if bodyline != "" {
+			body += bodyline + "\n"
+		}
     }
-    
 
     if protocol == "HTTP" {
         request_http(mut conn)
     } else if protocol == "HTCPCP" {
+		header := parse_header(body) or {
+			request_http(mut conn)
+			return
+		}
+		println(header)
         conn.write("$parsed_scheme.pot_tag ok;)\n".bytes()) or {}
     }
 
-}
+}                       
 
 fn request_http(mut conn net.TcpConn) {
     data := os.read_file("html/418.html") or {
@@ -135,11 +150,11 @@ fn parse_scheme(s string) ?TeapotScheme {
         return none
     }
 
-    host := items[0]
+    host := items[0]                                        
     tag_additive := items[1] // pot tag & Additive
     ta := tag_additive.split("?")
     
-    mut additive := []string
+    mut additive := []string{}
     if ta.len == 2 {
         // not found additive
         additive = ta[1].split('&') // rfc2324で定義されていない？
@@ -154,3 +169,26 @@ fn parse_scheme(s string) ?TeapotScheme {
         additive: additive
     }
 }
+
+fn parse_header(s string) ?TeapotHeader {
+    lines := s.split("\n")
+
+	mut content_type := ""
+	mut additions := []string{}
+
+	for line in lines {
+		items := line.split(":")
+		key, value := items[0] or { continue }.replace(" ", ""), items[1] or { continue }.replace(" ", "")
+
+		match key {          
+			"Content-Type" { content_type = value }
+			"Accept-Additions" { additions = value.split(",") }
+			else {}
+		}
+	}
+	return TeapotHeader{
+		content_type: content_type
+		accept_additions: additions
+	}
+}
+

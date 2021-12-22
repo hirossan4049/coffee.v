@@ -21,7 +21,7 @@ struct TeapotScheme {
 mut:
     scheme string      
     host string
-    pot_tag string
+    pot_tag string                                                                                          
     additive []string
 }
 
